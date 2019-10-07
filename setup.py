@@ -1,16 +1,16 @@
 from setuptools import setup
 
 setup(
-    name='scissors',
+    name='exacto',
     version='0.1.3',
     description='Python tools for splitting strings.',
-    url='http://github.com/arthexis/scissors',
-    download_url='https://github.com/arthexis/scissors/archive/v0.1.3.tar.gz',
+    url='http://github.com/arthexis/exacto',
+    download_url='https://github.com/arthexis/exacto/archive/v0.1.3.tar.gz',
     author='Rafael Guillén',
     author_email='arthexis@gmail.com',
     license='MIT',
     keywords=["UTILS", "SPLIT"],
-    packages=['scissors'],
+    packages=['exacto'],
     zip_safe=False,
     classifiers=[
         'Development Status :: 3 - Alpha',

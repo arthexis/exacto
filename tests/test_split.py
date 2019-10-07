@@ -1,4 +1,4 @@
-from scissors import *  # The code to test
+from exacto import *  # The code to test
 
 
 class TestSplit:

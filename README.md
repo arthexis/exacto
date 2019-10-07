@@ -11,7 +11,7 @@ However, if performance is your primary goal, these tools may not be for you.
 # Usage
 
 ```python
-from scissors import split, Quotes
+from exacto import split, Quotes
 
 # Simple example with default rules: split on whitespace
 result = split("Hello   World")  
