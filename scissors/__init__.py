@@ -2,10 +2,20 @@ from .rules import *
 from .scanner import *
 from .ruleset import *
 
-__all__ = ["split", "Rule", "Ruleset", "Delimit", "Quote", "Escape"]
+__all__ = [
+    "split",
+    "Rule",
+    "Ruleset",
+    "Space",
+    "Delimit",
+    "AlphaNum",
+    "Quote",
+    "Escape",
+    "Nested",
+]
 
 
-def split(text, *args, on=Delimit, dense=True) -> List[str]:
+def split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
     """
     Split text according to list of rules applied in order.
     By default a Delimit() rule is automatically appended.
@@ -14,6 +24,7 @@ def split(text, *args, on=Delimit, dense=True) -> List[str]:
     :param args: A list of Rule classes or instances.
     :param on: Use to override the final Delimit rule.
     :param dense: If True (the default), exclude empty elements.
+    :param strip: f True (the default), run each fragment through strip.
 
     Frequently used recipes:
 
@@ -34,4 +45,10 @@ def split(text, *args, on=Delimit, dense=True) -> List[str]:
             if rule_function(_scanner):
                 break
 
+    if strip:
+        return [f.strip() for f in _scanner.as_list()]
     return _scanner.as_list()
+
+
+if __name__ == "__main__":
+    pass

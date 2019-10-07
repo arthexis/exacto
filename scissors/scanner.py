@@ -80,4 +80,6 @@ class Scanner:
 
     def as_list(self):
         """Return the current results as a list."""
-        return [*self._parts, "".join(self._buffer)]
+        if not self.dense or any(self._buffer):
+            return [*self._parts, "".join(self._buffer)]
+        return self._parts

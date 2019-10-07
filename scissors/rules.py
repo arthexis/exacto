@@ -9,76 +9,122 @@ class Rule:
 
 
 class Delimit(Rule):
-    """Splits on character, defaults to any whitespace."""
+    """Splits on a specific delimiter string."""
 
     __slots__ = ("on")
 
-    def __init__(self, on=None):
-        self.on = [on] if isinstance(on, str) else on or []
+    def __init__(self, on):
+        self.on = on
 
     def __call__(self, scanner:  "Scanner"):
-        if not self.on and scanner.peek(1).isspace():
+        match = scanner.match(self.on)
+        if match:
+            scanner.split()
+            scanner.forward(len(match))
+            return True
+        scanner.consume(1)
+
+
+class Space(Rule):
+    """Splits on whitespace."""
+
+    def __call__(self, scanner:  "Scanner"):
+        if scanner.peek(1).isspace():
             scanner.split()
             scanner.forward(1)
             return True
-        for on in self.on:
-            match = scanner.match(on)
-            if match:
-                scanner.split()
-                scanner.forward(len(match))
-                return True
+        scanner.consume(1)
+
+
+class AlphaNum(Rule):
+    """Splits on any non-alphanumeric character."""
+
+    def __call__(self, scanner:  "Scanner"):
+        if not scanner.peek(1).isalnum():
+            scanner.split()
+            scanner.forward(1)
+            return True
         scanner.consume(1)
 
 
 class Quote(Rule):
     """Prevents splitting between quotes."""
 
-    __slots__ = ("patterns", "match", "stored", "keep")
+    __slots__ = ("on", "stored", "keep")
 
-    def __init__(self, *patterns, keep=True):
-        self.patterns = patterns or "\"'"
-        self.match = None
-        self.stored = []
+    def __init__(self, on="\"", keep=True):
+        self.on = on
+        self.stored = None
         self.keep = keep
 
     def __call__(self, scanner: "Scanner"):
-        for p in [self.match] if self.match else self.patterns:
-            match = scanner.match(p)
-            if match:
-                scanner.forward(len(match))
-                if self.match:
-                    text = "".join(self.stored)
-                    if self.keep:
-                        text = f"{self.match}{text}{self.match}"
-                    self.match = None
-                    self.stored.clear()
-                    scanner.add_to_buffer(text)
-                    return True
-                self.match = match
+        match = scanner.match(self.on)
+        if match:
+            scanner.forward(len(match))
+            if self.stored is None:
+                self.stored = []
+            else:
+                text = "".join(self.stored)
+                if self.keep:
+                    text = f"{self.on}{text}{self.on}"
+                self.stored = None
+                scanner.add_to_buffer(text)
                 return True
-        if self.match:
+            return True
+        if self.stored is not None:
             value = scanner.read(1)
             self.stored.append(value)
+            return True
+
+
+class Nested(Rule):
+    """Allow fragments with nested parenthesis."""
+
+    __slots__ = ("start", "close", "depth", "stored")
+
+    def __init__(self, start="(", close=")"):
+        self.start = start
+        self.close = close
+        self.depth = 0
+        self.stored = None
+
+    def __call__(self, scanner: "Scanner"):
+        match = scanner.match(self.start, self.close)
+        if match == self.start:
+            if self.depth == 0:
+                self.stored = []
+            self.depth += 1
+            value = scanner.read(len(match))
+            self.stored.append(value)
+            return True
+        if self.depth > 0:
+            value = scanner.read(1)
+            self.stored.append(value)
+            if match == self.close:
+                self.depth -= 1
+                if self.depth == 0:
+                    text = "".join(self.stored)
+                    scanner.add_to_buffer(text)
+                    self.stored = None
             return True
 
 
 class Escape(Rule):
     """Escapes especial characters."""
 
-    __slots__ = ("match", "patterns")
+    __slots__ = ("on", "escaped")
 
-    def __init__(self, *patterns):
-        self.match = None
-        self.patterns = patterns or "\\"
+    def __init__(self, on):
+        self.escaped = False
+        self.on = on
 
     def __call__(self, scanner:  "Scanner"):
-        if self.match:
+        if self.escaped:
             scanner.consume(1)
-            self.match = None
+            self.escaped = False
             return False
-        for p in self.patterns:
-            match = scanner.match(p)
-            if match:
-                scanner.forward(len(match))
-                self.match = match
-                return True
+        match = scanner.match(self.on)
+        if match:
+            scanner.forward(len(match))
+            self.escaped = True
+            return True
