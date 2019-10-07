@@ -114,3 +114,9 @@ class TestIterSplit:
         expected = ["Hello", "World"]
         assert actual == expected
 
+    def test_default_no_strip(self):
+        text = " Hello . World"
+        actual = [x for x in iter_split(text, on=".", strip=False)]
+        expected = [" Hello ", " World"]
+        assert actual == expected
+

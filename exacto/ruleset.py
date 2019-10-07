@@ -1,6 +1,6 @@
 import inspect
 
-from rules import *
+from .rules import *
 
 
 class Ruleset:
