@@ -105,3 +105,12 @@ class TestSplit:
         expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
         assert actual == expected
 
+
+class TestIterSplit:
+
+    def test_default(self):
+        text = "Hello World"
+        actual = [x for x in iter_split(text)]
+        expected = ["Hello", "World"]
+        assert actual == expected
+

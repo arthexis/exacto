@@ -19,6 +19,11 @@ class Scanner:
         """True if we have scanned the whole fragment, False otherwise."""
         return self.pos >= len(self.text)
 
+    @property
+    def ready(self):
+        """True if at least one result has been obtained."""
+        return len(self._parts) and any(self._parts)
+
     def consume(self, n=1) -> None:
         """
         Add n characters from fragment to buffer and advance pos by n.
@@ -70,16 +75,25 @@ class Scanner:
 
         self._buffer.append(fragment)
 
+    @property
+    def tail(self):
+        """Text not split, but currently in the buffer."""
+        return "".join(self._buffer)
+
     def split(self, tag=None) -> None:
         """Split the current buffer."""
 
         if not self.dense or any(self._buffer):
-            self._parts.append("".join(self._buffer))
+            self._parts.append(self.tail)
             self._tags.append(tag)
             self._buffer.clear()
 
     def as_list(self):
         """Return the current results as a list."""
         if not self.dense or any(self._buffer):
-            return [*self._parts, "".join(self._buffer)]
+            return [*self._parts, self.tail]
         return self._parts
+
+    def pop_result(self, i=0):
+        """Return and remove one of the stored result parts."""
+        return self._parts.pop(i)
