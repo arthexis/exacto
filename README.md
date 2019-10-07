@@ -1,6 +1,6 @@
-# Scissors
+# Exacto
 
-Scissors is a collection of Python tools that simplify splitting strings according to non-trivial business rules. You may find this package useful if: 
+Exacto is a collection of Python tools that simplify splitting strings according to non-trivial business rules. You may find this package useful if: 
 
   - A regular expression is not enough for your use case.
   - You want to avoid writing and maintaining manual parsing code.

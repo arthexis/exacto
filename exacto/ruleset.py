@@ -1,8 +1,6 @@
 import inspect
 
-from rules import Delimit
-
-__all__ = ["Ruleset"]
+from rules import *
 
 
 class Ruleset:

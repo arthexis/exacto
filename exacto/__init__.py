@@ -1,4 +1,3 @@
-from .rules import *
 from .scanner import *
 from .ruleset import *
 
