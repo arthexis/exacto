@@ -81,9 +81,27 @@ class TestSplit:
         expected = ["ENV='Test Env'", "PARAM=[SRC.PARAM]", "VAL"]
         assert actual == expected
 
-    def test_nested_multi_quote_delimit(self):
+    def test_nested_double_quote_delimit(self):
         text = "ENV='Test Env'.PARAM=[SRC.PARAM].VAL=\"NEXT.ENV\""
         actual = split(text, Quote("'"), Quote('"'), Nested("[", "]"), on=".")
         expected = ["ENV='Test Env'", "PARAM=[SRC.PARAM]", "VAL=\"NEXT.ENV\""]
+        assert actual == expected
+
+    def test_multi_quote_space(self):
+        text = "ENV='Test \"More Space\" Env' PARAM"
+        actual = split(text, Quotes)
+        expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
+        assert actual == expected
+
+    def test_multi_quote_explicit_space(self):
+        text = "ENV=$Test -More Space- Env$ PARAM"
+        actual = split(text, Quotes("$", "-"))
+        expected = ["ENV=$Test -More Space- Env$", "PARAM"]
+        assert actual == expected
+
+    def test_nested_quotes_backwards(self):
+        text = "ENV='Test \"More Space\" Env' PARAM"
+        actual = split(text, Quotes)
+        expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
         assert actual == expected
 

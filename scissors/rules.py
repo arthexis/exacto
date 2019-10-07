@@ -69,7 +69,40 @@ class Quote(Rule):
                     text = f"{self.on}{text}{self.on}"
                 self.stored = None
                 scanner.add_to_buffer(text)
-                return True
+            return True
+        if self.stored is not None:
+            value = scanner.read(1)
+            self.stored.append(value)
+            return True
+
+
+class Quotes(Rule):
+    """Prevents splitting between multiple quote types."""
+
+    __slots__ = ("on", "match", "stored", "keep")
+
+    def __init__(self, *on, keep=True):
+        self.on = on or ("'", '"')
+        self.match = None
+        self.stored = None
+        self.keep = keep
+
+    def __call__(self, scanner: "Scanner"):
+        match = scanner.match(*self.on)
+        if match:
+            scanner.forward(len(match))
+            if self.stored is None:
+                self.stored = []
+                self.match = match
+            elif match == self.match:
+                text = "".join(self.stored)
+                if self.keep:
+                    text = f"{self.match}{text}{self.match}"
+                self.stored = None
+                self.match = None
+                scanner.add_to_buffer(text)
+            else:
+                self.stored.append(match)
             return True
         if self.stored is not None:
             value = scanner.read(1)

@@ -10,6 +10,7 @@ __all__ = [
     "Delimit",
     "AlphaNum",
     "Quote",
+    "Quotes",
     "Escape",
     "Nested",
 ]
