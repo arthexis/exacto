@@ -11,14 +11,14 @@ However, if performance is your primary goal, these tools may not be for you.
 # Usage
 
 ```python
-from exacto import split, Quotes
+from exacto import split, MultiQuote
 
 # Simple example with default rules: split on whitespace
 result = split("Hello   World")  
 assert result == ["Hello", "World"]
 
 # Complicated example with custom separator and quotes
-result = split("ENV='Prod-172.0.10.10'.VER='2.1'", Quotes, on=".")
+result = split("ENV='Prod-172.0.10.10'.VER='2.1'", MultiQuote, on=".")
 assert result == ["ENV='Prod Env'", "VER='2.1'"]
 ```
 

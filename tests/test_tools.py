@@ -97,19 +97,19 @@ class TestSplit:
 
     def test_multi_quote_space(self):
         text = "ENV='Test \"More Space\" Env' PARAM"
-        actual = split(text, Quotes)
+        actual = split(text, MultiQuote)
         expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
         assert actual == expected
 
     def test_multi_quote_explicit_space(self):
         text = "ENV=$Test -More Space- Env$ PARAM"
-        actual = split(text, Quotes("$", "-"))
+        actual = split(text, MultiQuote("$", "-"))
         expected = ["ENV=$Test -More Space- Env$", "PARAM"]
         assert actual == expected
 
     def test_nested_quotes_backwards(self):
         text = "ENV='Test \"More Space\" Env' PARAM"
-        actual = split(text, Quotes)
+        actual = split(text, MultiQuote)
         expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
         assert actual == expected
 
