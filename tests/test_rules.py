@@ -1,10 +1,30 @@
-from exacto.scanner import Scanner
-from exacto.rules import Rule
+from exacto.rules import *
 
 
-class TestRules:
+class TestRule:
 
-    def test_base_rule(self):
-        rule = Rule()
-        scanner = Scanner()
-        assert rule(scanner) is False
+    def test_space_done(self):
+        buffer = list("Foo ")
+        done = space(buffer)
+        assert buffer == list("Foo")
+        assert done
+
+    def test_delimit_done(self):
+
+        buffer = list("Foo+")
+        done = delimit("+")(buffer)
+        assert buffer == list("Foo")
+        assert done
+
+    def test_quote(self):
+        func = quote("'")
+        original = list("Hello 'World'")
+        buffer = []
+        for char in original:
+            buffer.append(char)
+            done = func(buffer)
+        assert buffer == list("Hello ") + ["'World'"]
+
+    def test_multi_quote(self):
+        funcs = quote("'", '"')
+        assert len(funcs) == 2

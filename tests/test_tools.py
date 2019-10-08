@@ -1,130 +1,88 @@
-import pytest
-
-from exacto import *  # The code to test
+from exacto.tools import *
+from exacto.rules import *
 
 
 class TestSplit:
 
-    def test_default(self):
+    def test_default_space(self):
         text = "Hello World"
-        actual = split(text)
+        actual = list(split(text))
         expected = ["Hello", "World"]
         assert actual == expected
 
-    def test_whitespace_dense(self):
-        text = "Hello   World"
-        actual = split(text)
+    def test_space(self):
+        text = "Hello World"
+        actual = list(split(text, space))
         expected = ["Hello", "World"]
         assert actual == expected
 
-    def test_whitespace_no_dense(self):
-        text = "Hello   World"
-        actual = split(text, dense=False)
-        expected = ["Hello", "", "", "World"]
-        assert actual == expected
-
-    def test_single_quoted(self):
-        text = "Hello 'This Nice' World"
-        actual = split(text, Quote("'"))
-        expected = ["Hello", "'This Nice'", "World"]
-        assert actual == expected
-
-    def test_single_quoted_no_keep(self):
-        text = "Hello 'This Nice' World"
-        actual = split(text, Quote("'", keep=False))
-        expected = ["Hello", "This Nice", "World"]
-        assert actual == expected
-
-    def test_long_delimiter(self):
-        text = "Hello#@#World Test"
-        actual = split(text, on="#@#")
-        expected = ["Hello", "World Test"]
-        assert actual == expected
-
-    def test_escape_delimiter(self):
-        text = "Hello$.World"
-        actual = split(text, Escape("$"), on=".")
-        expected = ["Hello.World"]
-        assert actual == expected
-
-    def test_strip(self):
-        text = "Hello . World"
-        actual = split(text, on=".")
+    def test_delimit(self):
+        text = "Hello.World"
+        actual = list(split(text, delimit(".")))
         expected = ["Hello", "World"]
         assert actual == expected
 
-    def test_no_strip(self):
-        text = "Hello . World"
-        actual = split(text, on=".", strip=False)
-        expected = ["Hello ", " World"]
+    def test_delimit_multichar(self):
+        text = "Hello#@#World"
+        actual = list(split(text, delimit("#@#")))
+        expected = ["Hello", "World"]
         assert actual == expected
 
-    def test_nested_single(self):
-        text = "Hello (good point) World"
-        actual = split(text, Nested)
-        expected = ["Hello", "(good point)", "World"]
+    def test_delimit_dense(self):
+        text = "Hello..World"
+        actual = list(split(text, delimit(".")))
+        expected = ["Hello", "World"]
         assert actual == expected
 
-    def test_nested_double(self):
-        text = "Hello (good (po int) yes) World"
-        actual = split(text, Nested)
-        expected = ["Hello", "(good (po int) yes)", "World"]
+    def test_delimit_not_dense(self):
+        text = "Hello..World"
+        actual = list(split(text, delimit("."), dense=False))
+        expected = ["Hello", "", "World"]
         assert actual == expected
 
-    def test_nested_missing_close(self):
-        text = "Hello (good (po int( yes) World"
-        actual = split(text, Nested)
-        expected = ["Hello", "(good (po int( yes) World"]
-        assert actual == expected
+    def test_quote(self):
+        text = "Hello 'World' Again"
+        actual = list(split(text, quote("'")))
+        assert "".join(actual) == text
 
-    def test_alphanum(self):
-        text = "Hello. This is a test."
-        actual = split(text, on=AlphaNum)
-        expected = ["Hello", "This", "is", "a", "test"]
-        assert actual == expected
-
-    def test_nested_quote_delimit(self):
-        text = "ENV='Test Env'.PARAM=[SRC.PARAM].VAL"
-        actual = split(text, Quote("'"), Nested("[", "]"), on=".")
-        expected = ["ENV='Test Env'", "PARAM=[SRC.PARAM]", "VAL"]
-        assert actual == expected
-
-    def test_nested_double_quote_delimit(self):
-        text = "ENV='Test Env'.PARAM=[SRC.PARAM].VAL=\"NEXT.ENV\""
-        actual = split(text, Quote("'"), Quote('"'), Nested("[", "]"), on=".")
-        expected = ["ENV='Test Env'", "PARAM=[SRC.PARAM]", "VAL=\"NEXT.ENV\""]
+    def test_quote_space(self):
+        text = "Hello 'This Example' Again"
+        actual = list(split(text, quote("'"), space))
+        expected = ["Hello", "'This Example'", "Again"]
         assert actual == expected
 
     def test_multi_quote_space(self):
-        text = "ENV='Test \"More Space\" Env' PARAM"
-        actual = split(text, MultiQuote)
-        expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
+        text = "Hello 'This Example' \"Another Example\" Again"
+        actual = list(split(text, *quote("'", '"'), space))
+        expected = ["Hello", "'This Example'", '"Another Example"', "Again"]
         assert actual == expected
 
-    def test_multi_quote_explicit_space(self):
-        text = "ENV=$Test -More Space- Env$ PARAM"
-        actual = split(text, MultiQuote("$", "-"))
-        expected = ["ENV=$Test -More Space- Env$", "PARAM"]
+    def test_nest_lv1_space(self):
+        text = "Hello (This Example) World"
+        actual = list(split(text, nest("(", ")"), space))
+        expected = ["Hello", "(This Example)", "World"]
         assert actual == expected
 
-    def test_nested_quotes_backwards(self):
-        text = "ENV='Test \"More Space\" Env' PARAM"
-        actual = split(text, MultiQuote)
-        expected = ["ENV='Test \"More Space\" Env'", "PARAM"]
+    def test_nest_lv2_space(self):
+        text = "Hello (This is (Another Interesting) Example) World"
+        actual = list(split(text, nest("(", ")"), space))
+        expected = ["Hello", "(This is (Another Interesting) Example)", "World"]
         assert actual == expected
 
-
-class TestIterSplit:
-
-    def test_default(self):
-        text = "Hello World"
-        actual = [x for x in iter_split(text)]
-        expected = ["Hello", "World"]
+    def test_nest_lv1_quote_space(self):
+        text = "Hello (This 'One' Example) World"
+        actual = list(split(text, nest("(", ")"), quote("'"), space))
+        expected = ["Hello", "(This 'One' Example)", "World"]
         assert actual == expected
 
-    def test_default_no_strip(self):
-        text = " Hello . World"
-        actual = [x for x in iter_split(text, on=".", strip=False)]
-        expected = [" Hello ", " World"]
+    def test_escape_delimit(self):
+        text = "Hello$.World"
+        actual = list(split(text, escape("$"), delimit(".")))
+        expected = ["Hello.World"]
         assert actual == expected
 
+    def test_escape_quote_delimit(self):
+        text = "Hello-'Foo-$'-Bar'-World"
+        actual = list(split(text, escape("$"), quote("'"), delimit("-")))
+        expected = ["Hello", "'Foo-'-Bar'", "World"]
+        assert actual == expected

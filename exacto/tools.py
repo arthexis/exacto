@@ -1,20 +1,18 @@
-from .scanner import *
-from .ruleset import *
+import io
+from typing import Iterable, Callable
+
+from .rules import space, delimit
 
 
-def split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
+def split(text, *args: Callable, dense=True) -> Iterable[str]:
     """
     Split text according to list of rules applied in order.
-
-    By default a Space rule is automatically appended at the end, if you use
-    on to override this, you must use Delimit, Space, AlphaNum or a custom
-    Rule that calls Scanner.split at some point.
+    The "space" (split on whitespace) rule is used if no rules are specified.
 
     :param text: The text to split.
-    :param args: A list of Rule classes or instances.
-    :param on: The last rule to apply, defaults to Space.
-    :param dense: If True (default), exclude empty elements.
-    :param strip: If True (default), call str.strip on each fragment.
+    :param args: A list of Rule instances or strings.
+    :param dense: If true (default), exclude empty fragments.
+    :return: A generator that yields string fragments.
 
     Frequently used recipes:
 
@@ -27,34 +25,28 @@ def split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
     ["Hello", "'What a Beautiful'", "World"]
     """
 
-    _scanner = Scanner(text, dense=dense)
-    _ruleset = Ruleset((*args, on))
-
-    while not _scanner.finished:
-        for rule_function in _ruleset:
-            if rule_function(_scanner):
+    src = io.StringIO(text)
+    buffer = []
+    rules = [
+        delimit(r) if isinstance(r, str) else r
+        for r in (args or (space, ))
+    ]
+    val = src.read(1)                       # Read 1 char at a time
+    while val:
+        buffer.append(val)                  # Keep chars read in buffer
+        for rule in rules:
+            if rule(buffer):                # Buffer is mutated by rule
+                text = "".join(buffer)      # If True, split here
+                if not dense or text:
+                    yield text
+                buffer.clear()              # Reset the buffer after split
                 break
-
-    if strip:
-        return [f.strip() for f in _scanner.as_list()]
-    return _scanner.as_list()
-
-
-def iter_split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
-    """Same as split but return an iterator instead."""
-
-    _scanner = Scanner(text, dense=dense)
-    _ruleset = Ruleset((*args, on))
-
-    while not _scanner.finished:
-        for rule_function in _ruleset:
-            if rule_function(_scanner):
-                break
-        if _scanner.ready:
-            result = _scanner.pop_result(0)
-            yield result.strip() if strip else result
-    yield _scanner.tail.strip() if strip else _scanner.tail
-
-
-if __name__ == "__main__":
-    pass
+            if not buffer:
+                break                       # Skip rules if no buffer
+        val = src.read(1)
+    for rule in rules:
+        rule(buffer)                        # One last squeeze
+    if buffer:
+        text = "".join(buffer)              # Return remainder in buffer
+        if not dense or text:
+            yield text
