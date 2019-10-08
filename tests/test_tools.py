@@ -45,6 +45,11 @@ class TestSplit:
         actual = list(split(text, quote("'")))
         assert "".join(actual) == text
 
+    def test_quote_leftover(self):
+        text = "Hello 'World Again"
+        actual = list(split(text, quote("'")))
+        assert "".join(actual) == text
+
     def test_quote_space(self):
         text = "Hello 'This Example' Again"
         actual = list(split(text, quote("'"), space))
@@ -86,3 +91,10 @@ class TestSplit:
         actual = list(split(text, escape("$"), quote("'"), delimit("-")))
         expected = ["Hello", "'Foo-'-Bar'", "World"]
         assert actual == expected
+
+    def test_alphanum(self):
+        text = "Hello-Foo World.Tree"
+        actual = list(split(text, alphanum))
+        expected = ["Hello", "Foo", "World", "Tree"]
+        assert actual == expected
+

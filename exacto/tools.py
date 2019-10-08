@@ -44,9 +44,15 @@ def split(text, *args: Callable, dense=True) -> Iterable[str]:
             if not buffer:
                 break                       # Skip rules if no buffer
         val = src.read(1)
-    for rule in rules:
-        rule(buffer)                        # One last squeeze
     if buffer:
-        text = "".join(buffer)              # Return remainder in buffer
+        text = "".join(buffer)              # Yield remainder in buffer
         if not dense or text:
             yield text
+        buffer.clear()
+    for rule in rules:
+        rule(buffer)                        # One last squeeze
+        if buffer:
+            text = "".join(buffer)          # Yield the last squeeze
+            if not dense or text:
+                yield text
+            break

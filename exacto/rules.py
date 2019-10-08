@@ -59,20 +59,23 @@ def quote(*seps):
 
 def nest(start, finish):
     stored, level = [], 0
+    start, finish = list(start), list(finish)
+    ssize, fsize = len(start), len(finish)
 
     def inner(buffer: List[str]):
         nonlocal stored, level
         if level > 0:
             stored.append(buffer.pop())
-            if finish == stored[-1]:
+            if len(stored) >= fsize and finish == stored[-ssize:]:
                 level = max(level - 1, 0)
                 if level == 0:
                     buffer.append("".join(stored))
                     stored.clear()
-            elif start == stored[-1]:
+            elif len(stored) >= ssize and start == stored[-ssize:]:
                 level += 1
-        elif start == buffer[-1]:
-            stored.append(buffer.pop())
+        elif len(buffer) >= ssize and start == buffer[-ssize:]:
+            for _ in range(ssize):
+                stored.insert(0, buffer.pop())
             level += 1
 
     return inner
