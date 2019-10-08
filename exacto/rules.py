@@ -113,13 +113,19 @@ class Quotes(Rule):
 class Nested(Rule):
     """Allow fragments with nested parenthesis."""
 
-    __slots__ = ("start", "close", "depth", "stored")
+    __slots__ = ("start", "close", "depth", "stored", "stream")
 
-    def __init__(self, start="(", close=")"):
+    def __init__(self, start="(", close=")", stream=False):
         self.start = start
         self.close = close
         self.depth = 0
         self.stored = None
+        self.stream = stream
+
+    def pop_text(self):
+        text = "".join(self.stored)
+        self.stored = None
+        return text
 
     def __call__(self, scanner: "Scanner"):
         match = scanner.match(self.start, self.close)
@@ -127,18 +133,17 @@ class Nested(Rule):
             if self.depth == 0:
                 self.stored = []
             self.depth += 1
-            value = scanner.read(len(match))
-            self.stored.append(value)
+            self.stored.append(scanner.read(len(match)))
             return True
         if self.depth > 0:
-            value = scanner.read(1)
-            self.stored.append(value)
+            self.stored.append(scanner.read(1))
             if match == self.close:
                 self.depth -= 1
                 if self.depth == 0:
-                    text = "".join(self.stored)
-                    scanner.add_to_buffer(text)
-                    self.stored = None
+                    scanner.add_to_buffer(self.pop_text())
+            elif not self.stream and scanner.finished:
+                scanner.add_to_buffer(self.pop_text())
+                self.depth = 0
             return True
 
 

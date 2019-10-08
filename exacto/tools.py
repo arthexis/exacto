@@ -5,13 +5,16 @@ from .ruleset import *
 def split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
     """
     Split text according to list of rules applied in order.
-    By default a Delimit() rule is automatically appended.
+
+    By default a Space rule is automatically appended at the end, if you use
+    on to override this, you must use Delimit, Space, AlphaNum or a custom
+    Rule that calls Scanner.split at some point.
 
     :param text: The text to split.
     :param args: A list of Rule classes or instances.
-    :param on: Use to override the final Delimit rule.
-    :param dense: If True (the default), exclude empty elements.
-    :param strip: f True (the default), run each fragment through strip.
+    :param on: The last rule to apply, defaults to Space.
+    :param dense: If True (default), exclude empty elements.
+    :param strip: If True (default), call str.strip on each fragment.
 
     Frequently used recipes:
 
@@ -48,15 +51,9 @@ def iter_split(text, *args, on=Space, dense=True, strip=True) -> List[str]:
             if rule_function(_scanner):
                 break
         if _scanner.ready:
-            if strip:
-                yield _scanner.pop_result(0).strip()
-            else:
-                yield _scanner.pop_result(0)
-
-    if strip:
-        yield _scanner.tail.strip()
-    else:
-        yield _scanner.tail
+            result = _scanner.pop_result(0)
+            yield result.strip() if strip else result
+    yield _scanner.tail.strip() if strip else _scanner.tail
 
 
 if __name__ == "__main__":

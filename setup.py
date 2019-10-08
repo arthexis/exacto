@@ -11,7 +11,7 @@ setup(
     license='MIT',
     keywords=["UTILS", "SPLIT", "STRING"],
     packages=['exacto'],
-    zip_safe=False,
+    zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
@@ -22,5 +22,12 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
-    ]
+    ],
+    extras_require={
+        'dev': [
+            'pytest',
+            'black',
+            'pytest-cov'
+        ]
+    }
 )

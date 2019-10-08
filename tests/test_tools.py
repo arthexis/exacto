@@ -1,3 +1,5 @@
+import pytest
+
 from exacto import *  # The code to test
 
 
@@ -67,6 +69,12 @@ class TestSplit:
         text = "Hello (good (po int) yes) World"
         actual = split(text, Nested)
         expected = ["Hello", "(good (po int) yes)", "World"]
+        assert actual == expected
+
+    def test_nested_missing_close(self):
+        text = "Hello (good (po int( yes) World"
+        actual = split(text, Nested)
+        expected = ["Hello", "(good (po int( yes) World"]
         assert actual == expected
 
     def test_alphanum(self):
