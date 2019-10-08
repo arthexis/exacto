@@ -1,3 +1,5 @@
+import warnings
+
 from .scanner import Scanner
 
 
@@ -113,14 +115,15 @@ class Quotes(Rule):
 class Nested(Rule):
     """Allow fragments with nested parenthesis."""
 
-    __slots__ = ("start", "close", "depth", "stored", "stream")
+    __slots__ = ("start", "close", "depth", "stored", "stream", "warn")
 
-    def __init__(self, start="(", close=")", stream=False):
+    def __init__(self, start="(", close=")", stream=False, warn=True):
         self.start = start
         self.close = close
         self.depth = 0
         self.stored = None
         self.stream = stream
+        self.warn = warn
 
     def pop_text(self):
         text = "".join(self.stored)
@@ -144,6 +147,8 @@ class Nested(Rule):
             elif not self.stream and scanner.finished:
                 scanner.add_to_buffer(self.pop_text())
                 self.depth = 0
+                if self.warn:
+                    warnings.warn(f"Missing '{self.close}' in text.")
             return True
 
 
