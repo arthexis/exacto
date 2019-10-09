@@ -98,3 +98,11 @@ class TestSplit:
         expected = ["Hello", "Foo", "World", "Tree"]
         assert actual == expected
 
+
+class TestLift:
+
+    def test_nest(self):
+        text = "This [FOO] is a [BAR]"
+        actual = list(lift(text, nest("[", "]")))
+        expected = ["[FOO]", "[BAR]"]
+        assert actual == expected

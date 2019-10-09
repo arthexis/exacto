@@ -7,35 +7,49 @@ __all__ = [
     "quote",
     "nest",
     "escape",
+    "clear",
+    "method",
 ]
 
 
-def space(buffer: List[str]):
+def space(buffer: List[str], **kwargs):
     return buffer.pop() if buffer and buffer[-1].isspace() else False
 
 
-def alphanum(buffer: List[str]):
+def alphanum(buffer: List[str], **kwargs):
     return buffer.pop() if buffer and not buffer[-1].isalnum() else False
+
+
+def method(name, *args, **kwargs):
+
+    # noinspection PyShadowingNames,PyDefaultArgument
+    def inner(buffer: List[str], kw=kwargs, **kwargs):
+        nonlocal name, args
+        if buffer and getattr(buffer.pop(), name)(*args, **kw):
+            return buffer.pop()
+
+    return inner
 
 
 def delimit(sep):
     sep, size = list(sep), len(sep)
 
-    def inner(buffer: List[str]):
+    def inner(buffer: List[str], **kwargs):
+        nonlocal sep, size
         if len(buffer) >= size and buffer[-size:] == sep:
             return [buffer.pop() for _ in range(size)]
 
     return inner
 
 
-def quote(*seps):
+def quote(*seps, cutout=False):
     stored, inners, match = [], [], []
 
     for _sep in seps:
         _sep, _size = list(_sep), len(_sep)
 
-        # noinspection PyDefaultArgument
-        def inner(buffer: List[str], sep=_sep, size=_size):
+        # noinspection PyDefaultArgument,PyShadowingNames
+        def inner(buffer: List[str], sep=_sep, size=_size, cutout=cutout, **kwargs):
             nonlocal stored, match
             if match and match != sep:
                 return
@@ -48,35 +62,40 @@ def quote(*seps):
                         buffer.append("".join(stored))
                         stored.clear()
                         match.clear()
+                        return cutout
             elif len(buffer) >= size and sep == buffer[-size:]:
                 for _ in range(size):
                     stored.insert(0, buffer.pop())
                 match = sep[:]
+                return cutout
 
         inners.append(inner)
     return inners if len(inners) > 1 else inners[0]
 
 
-def nest(start, finish):
+def nest(start, finish, cutout=False):
     stored, level = [], 0
     start, finish = list(start), list(finish)
-    ssize, fsize = len(start), len(finish)
+    ss, fs = len(start), len(finish)
 
-    def inner(buffer: List[str]):
+    # noinspection PyUnusedLocal,PyShadowingNames
+    def inner(buffer: List[str], cutout=cutout, **kwargs):
         nonlocal stored, level
         if level > 0:
             stored.append(buffer.pop())
-            if len(stored) >= fsize and finish == stored[-ssize:]:
+            if len(stored) >= fs and finish == stored[-fs:]:
                 level = max(level - 1, 0)
                 if level == 0:
                     buffer.append("".join(stored))
                     stored.clear()
-            elif len(stored) >= ssize and start == stored[-ssize:]:
+                    return cutout
+            elif len(stored) >= ss and start == stored[-ss:]:
                 level += 1
-        elif len(buffer) >= ssize and start == buffer[-ssize:]:
-            for _ in range(ssize):
+        elif len(buffer) >= ss and start == buffer[-ss:]:
+            for _ in range(ss):
                 stored.insert(0, buffer.pop())
             level += 1
+            return cutout
 
     return inner
 
@@ -85,7 +104,7 @@ def escape(code):
     code, size = list(code), len(code)
     escaping, escaped = False, []
 
-    def inner(buffer: List[str]):
+    def inner(buffer: List[str], **kwargs):
         nonlocal escaping, escaped
         if escaping:
             escaped.append(buffer.pop())
@@ -100,3 +119,6 @@ def escape(code):
 
     return inner
 
+
+def clear(buffer: List[str], **kwargs):
+    buffer.clear()

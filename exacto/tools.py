@@ -1,7 +1,9 @@
 import io
 from typing import Iterable, Callable
 
-from .rules import space, delimit
+from .rules import *
+
+__all__ = ["split", "lift"]
 
 
 def split(text, *args: Callable, dense=True) -> Iterable[str]:
@@ -17,15 +19,46 @@ def split(text, *args: Callable, dense=True) -> Iterable[str]:
     Frequently used recipes:
 
     >>> # Split on whitespace, returning a dense list
-    >>> split("Hello   World ")
+    >>> list(split("Hello   World "))
     ["Hello", "World"]
 
+    >>> # Split on a delimiter, like str.split
+    >>> tuple(split("Foo.Bar.Foo", delimit(".")))
+    ("Foo", "Bar", "Foo)
+
     >>> # Split on whitespace except within quotes
-    >>> split("Hello 'What a Beautiful' World")
+    >>> from exacto.rules import quote
+    >>> list(split("Hello 'What a Beautiful' World", quote))
     ["Hello", "'What a Beautiful'", "World"]
     """
 
     src = io.StringIO(text)
+    return _apply(src, *args, dense=dense, op="split")
+
+
+def lift(text, *args: Callable):
+    """
+    Lift tokens out of a text, discarding everything else.
+
+    :param text: The text to lift.
+    :param args: A list of Rule instances or strings.
+    :return: A generator that yields string fragments.
+
+    Frequently used recipes:
+
+    >>> # Split on whitespace, returning a dense list
+    >>> list(lift("Hello [FOO] World [BAR]", nest("[", "]")))
+    ["[FOO]", "[BAR]"]
+    """
+
+    src = io.StringIO(text)
+    return _apply(src, *args, clear, dense=True, op="lift", cutout=True)
+
+
+def _apply(src, *args: Callable, **kwargs) -> Iterable[str]:
+    """Common implementation of split and lift tools."""
+
+    dense = kwargs.get("dense", True)
     buffer = []
     rules = [
         delimit(r) if isinstance(r, str) else r
@@ -35,12 +68,11 @@ def split(text, *args: Callable, dense=True) -> Iterable[str]:
     while val:
         buffer.append(val)                  # Keep chars read in buffer
         for rule in rules:
-            if rule(buffer):                # Buffer is mutated by rule
+            if rule(buffer, **kwargs):      # Buffer is mutated by rule
                 text = "".join(buffer)      # If True, split here
                 if not dense or text:
                     yield text
                 buffer.clear()              # Reset the buffer after split
-                break
             if not buffer:
                 break                       # Skip rules if no buffer
         val = src.read(1)
@@ -50,7 +82,7 @@ def split(text, *args: Callable, dense=True) -> Iterable[str]:
             yield text
         buffer.clear()
     for rule in rules:
-        rule(buffer)                        # One last squeeze
+        rule(buffer, **kwargs)              # One last squeeze
         if buffer:
             text = "".join(buffer)          # Yield the last squeeze
             if not dense or text:
