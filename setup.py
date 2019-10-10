@@ -7,12 +7,12 @@ with open(path.join(base_dir, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='exacto',
-    version='0.2.1',
+    version='0.2.2',
     description='Python tools for splitting strings.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='http://github.com/arthexis/exacto',
-    download_url='https://github.com/arthexis/exacto/archive/v0.2.1.tar.gz',
+    download_url='https://github.com/arthexis/exacto/archive/v0.2.2.tar.gz',
     author='Rafael Guillén',
     author_email='arthexis@gmail.com',
     license='MIT',
