@@ -1,9 +1,16 @@
 from setuptools import setup
+from os import path
+
+base_dir = path.abspath(path.dirname(__file__))
+with open(path.join(base_dir, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name='exacto',
     version='0.2.1',
     description='Python tools for splitting strings.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='http://github.com/arthexis/exacto',
     download_url='https://github.com/arthexis/exacto/archive/v0.2.1.tar.gz',
     author='Rafael Guillén',
