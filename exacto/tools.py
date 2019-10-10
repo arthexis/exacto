@@ -46,13 +46,13 @@ def lift(text, *args: Callable):
 
     Frequently used recipes:
 
-    >>> # Split on whitespace, returning a dense list
+    >>> # Lift tokens out of a text
     >>> list(lift("Hello [FOO] World [BAR]", nest("[", "]")))
-    ["[FOO]", "[BAR]"]
+    ["FOO", "BAR"]
     """
 
     src = io.StringIO(text)
-    return _apply(src, *args, clear, dense=True, op="lift", cutout=True)
+    return _apply(src, *args, clear, dense=True, op="lift", strip=True)
 
 
 def _apply(src, *args: Callable, **kwargs) -> Iterable[str]:

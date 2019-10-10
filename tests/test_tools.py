@@ -104,5 +104,11 @@ class TestLift:
     def test_nest(self):
         text = "This [FOO] is a [BAR]"
         actual = list(lift(text, nest("[", "]")))
-        expected = ["[FOO]", "[BAR]"]
+        expected = ["FOO", "BAR"]
+        assert actual == expected
+
+    def test_quotes(self):
+        text = "This 'FOO' is a 'BAR'"
+        actual = list(lift(text, quote("'")))
+        expected = ["FOO", "BAR"]
         assert actual == expected
